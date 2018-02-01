@@ -1,0 +1,19 @@
+# modules
+node_modules
+
+# npm
+npm-debug.log
+
+# yarn
+yarn-error.log
+
+# dist
+dist
+
+# bit
+components
+inline_components
+.bit
+
+# editor specific
+.vscode
