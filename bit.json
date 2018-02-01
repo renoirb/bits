@@ -4,11 +4,11 @@
         "tester": "bit.envs/testers/mocha@0.0.4"
     },
     "dependencies": {},
-    "saveDependenciesAsComponents": "true",
     "componentsDefaultDirectory": "components/{namespace}/{name}",
+    "saveDependenciesAsComponents": "true",
     "packageManager": "yarn",
     "dist": {
-        "target": "dist",
-        "entry": "src"
+        "entry": "src",
+        "target": "dist"
     }
 }
