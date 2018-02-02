@@ -5,7 +5,6 @@
     },
     "dependencies": {},
     "componentsDefaultDirectory": "components/{namespace}/{name}",
-    "saveDependenciesAsComponents": "true",
     "packageManager": "yarn",
     "dist": {
         "entry": "src",
