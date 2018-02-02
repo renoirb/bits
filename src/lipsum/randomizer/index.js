@@ -1,3 +1,2 @@
-import number from './number'
-
-export default { number }
+export { default as number } from './number'
+export { default as Sentences } from './sentences'

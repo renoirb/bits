@@ -425,7 +425,7 @@ delegates@^1.0.0:
   version "1.0.0"
   resolved "https://registry.yarnpkg.com/delegates/-/delegates-1.0.0.tgz#84c6e159b81904fdca59a0ef44cd870d31250f9a"
 
-"dependency-tree@github:teambit/node-dependency-tree":
+dependency-tree@teambit/node-dependency-tree:
   version "5.11.0"
   resolved "https://codeload.github.com/teambit/node-dependency-tree/tar.gz/7aef1bb39c7b06eb1f030ee8d7b3fb0978c2145d"
   dependencies:
