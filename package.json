@@ -4,7 +4,8 @@
   "description": "Renoir Bit components at https://bitsrc.io/renoirb/",
   "main": "src/index.js",
   "scripts": {
-    "test": "mocha './dist/**/*.spec.js'"
+    "lint": "standard",
+    "fix": "standard --fix"
   },
   "keywords": [
     "utilities"
@@ -13,8 +14,6 @@
   "license": "MIT",
   "dependencies": {},
   "devDependencies": {
-    "chai": "^4.1.2",
-    "mocha": "^5.0.0",
     "standard": "*"
   }
 }
