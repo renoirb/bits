@@ -5,7 +5,7 @@ dist: $(wildcard src/**/*) .bit/
 
 .PHONY: test
 test: $(wildcard src/**/*) .bit/
-	bit test
+	./scripts/test.sh
 
 node_modules:
 	yarn
