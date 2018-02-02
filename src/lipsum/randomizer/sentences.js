@@ -6,7 +6,7 @@
  * @package randomiser
  * @namespace renoirb.lipsum
  * @description Handles a random sequence of words and sentences from text
- * @param {string} sentences — A multi-line string of text, or no argument, defaults to Lorem Ipsum
+ * @param {string=} text — A multi-line string of text, or no argument, defaults to Lorem Ipsum
  * @returns {Sentences}
  * @example
  * const m = new Sentences()
@@ -14,9 +14,9 @@
  * m.getSentences(2) // => ['Dolor sit amet ...', 'Foo bar bazz ...']
  */
 class Sentences {
-  constructor (sentences = null) {
-    const text = sentences === null ? lorem : sentences
-    this.sentences = text.split(`\n`).filter(n => n !== '')
+  constructor (text = null) {
+    const sentences = text === null ? lorem : text
+    this.sentences = sentences.split(`\n`).filter(n => n !== '')
     this.possibilities = this.sentences.length
     this.isFirstTime = true
   }
@@ -32,6 +32,7 @@ class Sentences {
       }
       picks.push(this.sentences[i])
     }
+    this.isFirstTime = false
     return picks
   }
   getWords (n = 1) {

@@ -1,17 +1,15 @@
 #!/usr/bin/env bash
 
-# Run tests on all components
-# This is a shim for https://github.com/teambit/bit/issues/704
-
 set -ue
 
 source "${PWD}/scripts/_common.sh"
 
-printf "\nRun tests for:\n"
+printf "\nComparing with remote Bit scope for:\n"
 echo ${BIT_LOCAL_PROJECTS} | tr ' ' "\n"
 printf "\n"
 
 for bitIdentifier in ${BIT_LOCAL_PROJECTS}; do
-    bit test $bitIdentifier
+    bit show $bitIdentifier --compare
     printf "\n"
+    read -n 1 -s -r -p "Press any key to continue"
 done

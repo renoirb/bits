@@ -1,6 +1,6 @@
 /* eslint-env mocha */
 
-import chai from 'chai'
+import chai from 'chai' // eslint-disable-line
 
 const assert = chai.assert   // eslint-disable-line
 const expect = chai.expect   // eslint-disable-line

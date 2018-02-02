@@ -8,6 +8,10 @@ test: $(wildcard src/**/*) .bit/
 	yarn run lint
 	./scripts/test.sh
 
+.PHONY: compare
+compare: .bit/
+	./scripts/compare.sh
+
 node_modules:
 	yarn
 

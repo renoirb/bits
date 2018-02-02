@@ -1,6 +1,6 @@
 /* eslint-env mocha */
 
-import chai from 'chai'
+import chai from 'chai' // eslint-disable-line
 
 const assert = chai.assert   // eslint-disable-line
 const expect = chai.expect   // eslint-disable-line
@@ -38,7 +38,6 @@ describe('randomizer/sentences', () => {
     const text = `Hello world.\nHow Dal eravate assunto scavata ore bianche.\nEx da scarabei poggiata profonda obbedito ed dominati ambascia.`
     const s = new Sentences(text)
     const picks = s.getSentences(3)
-    console.log(picks[0])
     expect(picks[0]).to.match(/^Hello world/)
   })
 })
