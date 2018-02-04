@@ -1,6 +1,7 @@
 /* eslint-env mocha */
 
 import chai from 'chai' // eslint-disable-line
+import {Numbers as randomNumber} from '.'
 
 const assert = chai.assert   // eslint-disable-line
 const expect = chai.expect   // eslint-disable-line
@@ -35,5 +36,12 @@ describe('randomizer/index', () => {
     assert.isObject(s)
     const sanityRun = s.getSentences(3)
     expect(sanityRun[0]).to.match(/^Hello world/)
+  })
+
+  it('Should be invokable and used as an alias', () => {
+    expect(String(randomNumber(3))).to.have.lengthOf(3)
+    expect(String(randomNumber(2))).to.have.lengthOf(2)
+    const sanityRun = Array.from(Array(20), () => randomNumber(1))
+    expect(sanityRun, '0 should NOT be possible when is a one digit number').that.does.not.include(0)
   })
 })

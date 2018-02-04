@@ -33,7 +33,7 @@
         "mainFile": "src/lipsum/randomizer/sentences.js",
         "origin": "AUTHORED"
     },
-    "renoirb.lipsum/randomizer/index@0.0.1": {
+    "renoirb.lipsum/randomizer/index@0.1.0": {
         "files": [
             {
                 "relativePath": "src/lipsum/randomizer/index.spec.js",
@@ -47,6 +47,22 @@
             }
         ],
         "mainFile": "src/lipsum/randomizer/index.js",
+        "origin": "AUTHORED"
+    },
+    "renoirb.curries/curries/validatable@1.0.0": {
+        "files": [
+            {
+                "relativePath": "src/curries/validatable.spec.js",
+                "test": true,
+                "name": "validatable.spec.js"
+            },
+            {
+                "relativePath": "src/curries/validatable.js",
+                "test": false,
+                "name": "validatable.js"
+            }
+        ],
+        "mainFile": "src/curries/validatable.js",
         "origin": "AUTHORED"
     },
     "version": "0.12.4"

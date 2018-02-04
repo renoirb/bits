@@ -32,4 +32,5 @@
 * Follow [Standard.js](https://standardjs.com/) conventions
 * [ESLint](https://eslint.org/docs/user-guide/)
 * [JSDoc](http://usejsdoc.org/#block-tags) comment annotations
+  * [JSDoc documentation style guide](https://github.com/shri/JSDoc-Style-Guide)
 * Describe features using [ChaiJS](http://chaijs.com/) ([*BDD* expectations](http://chaijs.com/), [assertions](http://chaijs.com/api/assert/), etc.)
