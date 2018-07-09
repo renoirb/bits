@@ -65,5 +65,37 @@
         "mainFile": "src/curries/validatable.js",
         "origin": "AUTHORED"
     },
-    "version": "0.12.4"
+    "renoirb.bindings/types/constraint@0.0.4": {
+        "files": [
+            {
+                "relativePath": "src/types/constraint.js",
+                "test": false,
+                "name": "constraint.js"
+            },
+            {
+                "relativePath": "src/types/constraint.spec.js",
+                "test": true,
+                "name": "constraint.spec.js"
+            }
+        ],
+        "mainFile": "src/types/constraint.js",
+        "origin": "AUTHORED"
+    },
+    "renoirb.bindings/types/triplet@0.0.4": {
+        "files": [
+            {
+                "relativePath": "src/types/triplet.js",
+                "test": false,
+                "name": "triplet.js"
+            },
+            {
+                "relativePath": "src/types/triplet.spec.js",
+                "test": true,
+                "name": "triplet.spec.js"
+            }
+        ],
+        "mainFile": "src/types/triplet.js",
+        "origin": "AUTHORED"
+    },
+    "version": "13.0.1"
 }
