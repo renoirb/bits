@@ -1,4 +1,4 @@
-import { default as number } from './number'
+import { default as randomNumber } from './number'
 import { default as Sentences } from './sentences'
 
 /**
@@ -10,8 +10,8 @@ import { default as Sentences } from './sentences'
  * @package randomiser
  * @namespace renoirb.lipsum
  * @example
- * import {Numbers as randomNumber} from '@bit/renoirb.lipsum.randomizer.index'
+ * import {randomNumber} from '@bit/renoirb.lipsum.randomizer.index'
  * randomNumber(1) // => 2
  * randomNumber(2) // => 14
  */
-export default {Numbers: number, Sentences}
+export default {randomNumber, Sentences}

@@ -4,7 +4,8 @@ import Triplet from './triplet'
  * @bit
  * @public
  * @class
- * @name types/constraint
+ * @name Constraint
+ * @package bindings
  * @description A constraint is a collection of Triplet
  * @summary Constraint is responsible of handling all Triplet, and ensure no duplication exists
  *

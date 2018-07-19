@@ -18,8 +18,9 @@
   },
   "dependencies": {},
   "devDependencies": {
+    "babel-preset-env": "*",
     "bit-bin": "^13.0.3",
-    "chai": "^4.1.2",
+    "jest": "^23.4.1",
     "standard": "^11.0.1"
   }
 }

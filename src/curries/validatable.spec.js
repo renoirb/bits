@@ -1,12 +1,9 @@
-/* eslint-env mocha */
+/* eslint-env jest */
+/* global describe,beforeAll,afterAll,beforeEach,afterEach,test,expect */
 
-import chai from 'chai' // eslint-disable-line
+require('jest') // '@bit/bit.testers.jest'
 
-const assert = chai.assert   // eslint-disable-line
-const expect = chai.expect   // eslint-disable-line
-const should = chai.should() // eslint-disable-line
-
-const {validatable} = require('./validatable')
+const {validatable, ValidatableRules} = require('./validatable')
 
 class UsernameValidator {
   constructor () {
@@ -17,23 +14,21 @@ class UsernameValidator {
 }
 
 describe('curries/validatable', () => {
-  it('Component should exist', () => {
-    should.exist(validatable)
+  test('Component should exist', () => {
+    expect(validatable).toBeDefined()
   })
 
-  it('Is a Function', () => {
-    assert.isFunction(validatable)
-  })
-
-  it('Subject that has been curried has validatable object', () => {
+  test('Subject that has been curried has validatable object', () => {
     const subject = new UsernameValidator()
-    assert.isObject(subject.validatable, 'Has a ValidatableRules object')
-    assert.isFunction(subject.validate, 'Has added a "validate" function')
+    expect(subject).toHaveProperty('validatable') // Has a ValidatableRules object
+    expect(subject.validatable).toBeInstanceOf(ValidatableRules)
+    expect(subject).toHaveProperty('validate') // Has added a "validate" function
   })
 
-  it('Can run validation rules on', () => {
+  test('Can run validation rules on', () => {
     const subject = new UsernameValidator()
     const runs = []
+    // Refactored from Mocha to Jest, messages aren't taken into account anymore, but tests are still valid.
     runs.push(['J55555555', true, 'Billable account format lookalike, but not using expected first caracter'])
     runs.push(['jjjjjj', false, 'Less than 9'])
     runs.push(['jjjjjjjjj', true, 'Only letters'])
@@ -45,7 +40,8 @@ describe('curries/validatable', () => {
     runs.push(['J55555555', true, 'Billable account format lookalike, but not using expected first caracter'])
     for (const run of runs) {
       const check = subject.validate(run[0])
-      assert(check.hasPassed() === run[1], `String ${run[0]} should be ${run[1].toString()}, because; ${run[2]}`)
+      // assert(check.hasPassed() === run[1], `String ${run[0]} should be ${run[1].toString()}, because; ${run[2]}`)
+      expect(check.hasPassed()).toBe(run[1])
     }
   })
 })

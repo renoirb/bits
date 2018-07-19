@@ -1,7 +1,7 @@
 {
     "env": {
         "compiler": "bit.envs/compilers/babel@0.0.7",
-        "tester": "bit.envs/testers/mocha@0.0.4"
+        "tester": "bit.envs/testers/jest@0.0.32"
     },
     "dependencies": {},
     "componentsDefaultDirectory": "components/{namespace}/{name}",

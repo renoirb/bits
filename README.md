@@ -1,5 +1,7 @@
 # Renoir’s [bits](https://bitsrc.io/renoirb)
 
+A workspace where I develop Bit components/packages.
+
 [![JavaScript Style Guide](https://img.shields.io/badge/code_style-standard-brightgreen.svg)](https://standardjs.com)
 
 

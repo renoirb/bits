@@ -2,7 +2,8 @@
  * @bit
  * @public
  * @class
- * @name types/triplet
+ * @name Triplet
+ * @package bindings
  * @description A Triplet consist of a set of 3 elements; a field, an operator and an operand that is a pipe separated list of strings
  * @summary A triplet is ONE element, a description of what field to compare logically with what operator for given criteria
  *

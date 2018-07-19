@@ -1,4 +1,3 @@
-
 /**
  * @bit
  * @public
@@ -9,11 +8,11 @@
  * @param {number} digits — How many digits long you want the random number be
  * @returns {number}
  * @example
- * number(1) // => 2
- * number(2) // => 32
- * number(4) // => 2327
+ * randomNumber(1) // => 2
+ * randomNumber(2) // => 32
+ * randomNumber(4) // => 2327
  */
-export default function number (digits = 1) {
+export default function randomNumber (digits = 1) {
   if (Number.isNaN(digits)) {
     throw new Error(`Argument MUST be a number, invalid value ${digits}`)
   }
