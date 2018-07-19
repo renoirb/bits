@@ -2,19 +2,24 @@
   "name": "@renoirb/bits",
   "version": "1.0.0",
   "description": "Renoir Bit components at https://bitsrc.io/renoirb/",
-  "main": "src/index.js",
-  "scripts": {
-    "lint": "standard",
-    "fix": "standard --fix"
-  },
+  "author": "Renoir Boulanger <contribs@renoirboulanger.com>",
+  "license": "MIT",
   "keywords": [
     "utilities"
   ],
-  "author": "Renoir Boulanger <hello@renoirboulanger.com>",
-  "license": "MIT",
+  "files": [
+    "dist"
+  ],
+  "scripts": {
+    "lint": "standard",
+    "lint:fix": "standard --fix",
+    "dist": "bit build",
+    "test": "make test"
+  },
   "dependencies": {},
   "devDependencies": {
+    "bit-bin": "^13.0.3",
     "chai": "^4.1.2",
-    "standard": "*"
+    "standard": "^11.0.1"
   }
 }
