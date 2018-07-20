@@ -57,7 +57,7 @@ class Triplet {
       const [
         field,
         operator,
-        operands
+        operands = ''
       ] = notation.split('_$')
       return new Triplet(field, operator, operands)
     }
@@ -81,9 +81,6 @@ class Triplet {
   }
 
   toDefinition (stringifiedOperands = true) {
-    if (this.isValid() === false) {
-      return false
-    }
     let args = (({ field, operator, operands }) => ({ field, operator, operands }))(this)
     if (stringifiedOperands === true) {
       const operands = args.operands.join('|')

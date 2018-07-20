@@ -11,14 +11,14 @@ import Triplet from './triplet'
  *
  * @example
  * const filter = new Constraint()
- * const begin = 1530417600
+ * const begin = 1529812800
  * const end = 1530417600
- * filter.setBetween('createdAt', begin, end)
+ * filter.setBetween('CreatedDate', begin, end)
  * filter.addTriplet('Owner', 'eq', 'Administrator')
- * console.log(filter.toString())
- * // > createdAt_$gte_$1529812800,createdAt_$lte_$1530417600,Owner_$eq_$Administrator
- * filter.setBetween('createdAt', begin, end + 86400) // End date change to a day later
- * // > createdAt_$gte_$1529812800,createdAt_$lte_$1530504000,Owner_$eq_$Administrator
+ * filter.toString() // => CreatedDate_$gte_$1529812800,CreatedDate_$lte_$1530417600,Owner_$eq_$Administrator
+ * const laterOn = end + 86400 // a day later
+ * filter.setBetween('createdAt', begin, laterOn) // End date change to a day later
+ * filter.toString() // > CreatedDate_$gte_$1529812800,CreatedDate_$lte_$1530504000,Owner_$eq_$Administrator
  */
 class Constraint {
   /**
@@ -29,18 +29,13 @@ class Constraint {
   constructor (notation = '') {
     this.notation = notation
     this.triplets = []
-
     // Handle constraint state.
-    // items is an two-level deep object where the first level keys are the fields
+    // definition is an two-level deep object where the first level keys are the fields
     // the second level keys are the operator used on the field
     // The value is an array of applicable operands
     // Objective is to ensure guarantee there will only be
     // one set of operands for a given pair of field and operator.
-
-    // items.CreatedAt.gte // => [ 1529812800 ]
-    // items.CreatedAt.lte // => [ 1530417600 ]
-    // items.GroupMemberships.in // => [ 'root', 'wheel' ]
-    this.items = {}
+    this.definition = {}
     const parsed = Constraint.extractTripletsDefinition(notation)
     for (const dfn of parsed) {
       this.addTriplet(dfn.field, dfn.operator, dfn.operands)
@@ -54,7 +49,7 @@ class Constraint {
    * @return {Array.<String>}
    */
   get fields () {
-    return Object.keys(this.items)
+    return Object.keys(this.definition)
   }
 
   /**
@@ -66,11 +61,11 @@ class Constraint {
    * @return {object} Either an empty object, or a copy of the field representation
    */
   getFieldDefinition (field) {
-    const exists = Reflect.has(this.items, field)
+    const exists = Reflect.has(this.definition, field)
     if (exists === false) {
       return {}
     }
-    return {...this.items[field]}
+    return { ...this.definition[field] }
   }
 
   /**
@@ -88,32 +83,30 @@ class Constraint {
    */
   addTriplet (field, operator, operands) {
     const maybe = new Triplet(field, operator, operands)
-    if (maybe.isValid()) {
-      const hasField = Reflect.has(this.items, field)
-      if (hasField === false) {
-        this.items[field] = {}
-      } else {
-        // We got an item, it is likely in need to be removed from the triplets array
-        // var field = 'Foo', operator = 'gt', items = ['Foo_$lt_$10', 'Shou_$bi_$Dou', 'Bogus_$eq_$Bogue', 'Foo_$gt_$20'];
-        // items.findIndex(s => RegExp('^'+field+'_\\$'+operator).test(s))
-        const foundIndex = this.triplets.findIndex(s => RegExp('^' + field + '_\\$' + operator).test(s))
-        // const item = this.triplets[foundIndex].toString()
-        // console.log('One existed', foundIndex, item)
-        delete this.triplets[foundIndex]
-      }
-      const hasFieldOperator = !!Reflect.has(this.items[field], operator)
-      if (hasFieldOperator === false) {
-        this.items[field][operator] = []
-      }
-      // Watch out though, if you want to have numbers
-      // In the case of #setBetween, we'll have to OVERWRITE as Number
-      const definition = maybe.toDefinition(/* stringifiedOperands defaults true */ false)
-      this.items[field][operator] = [...definition.operands]
-      // /Handle constraint state.
-
-      this.triplets.push(maybe) // REMOVE ME!
-      this.notation = this.toString() // REMOVE ME!
+    const hasField = Reflect.has(this.definition, field)
+    if (hasField === false) {
+      this.definition[field] = {}
+    } else {
+      // We got an item, it is likely in need to be removed from the triplets array
+      // var field = 'Foo', operator = 'gt', definition = ['Foo_$lt_$1', 'Shou_$bi_$Dou', 'Foo_$gt_$10', 'Bogus_$eq_$Bogue', 'Foo_$gt_$20'];
+      // definition.findIndex(s => RegExp('^'+field+'_\\$'+operator).test(s))
+      const foundIndex = this.triplets.findIndex(s => RegExp('^' + field + '_\\$' + operator).test(s))
+      // const item = this.triplets[foundIndex].toString()
+      // console.log('One existed', foundIndex, item)
+      delete this.triplets[foundIndex]
     }
+    const hasFieldOperator = !!Reflect.has(this.definition[field], operator)
+    if (hasFieldOperator === false) {
+      this.definition[field][operator] = []
+    }
+    // Watch out though, if you want to have numbers
+    // In the case of #setBetween, we'll have to OVERWRITE as Number
+    const definition = maybe.toDefinition(/* stringifiedOperands defaults true */ false)
+    this.definition[field][operator] = [...definition.operands]
+    // /Handle constraint state.
+
+    this.triplets.push(maybe)
+    this.notation = this.toString()
   }
 
   /**
@@ -134,9 +127,9 @@ class Constraint {
     // In #addTriplet, we get a string, but internally here we'd prefer Numbers
     // That'S why we're OVERWRITING them as Number
     this.addTriplet(field, 'gte', begin.toString())
-    this.items[field]['gte'] = [begin]
+    this.definition[field]['gte'] = [begin]
     this.addTriplet(field, 'lte', end.toString())
-    this.items[field]['lte'] = [end]
+    this.definition[field]['lte'] = [end]
   }
 
   /**
@@ -152,10 +145,8 @@ class Constraint {
     // Taking no chance and worse case, we have an array of one.
     const notations = Constraint.extractTriplets(notation)
     for (const notation of notations) {
-      const maybe = Triplet.fromString(notation)
-      if (maybe.isValid()) {
-        definitions.push(maybe.toDefinition(/* stringifiedOperands defaults true */))
-      }
+      const dto = Triplet.fromString(notation)
+      definitions.push(dto.toDefinition(/* stringifiedOperands defaults true */))
     }
     return definitions
   }
@@ -189,8 +180,8 @@ class Constraint {
    */
   toString () {
     let triplets = []
-    for (const [ field, operators ] of Object.entries(this.items)) {
-      for (const [ operator, operands ] of Object.entries(operators)) {
+    for (const [field, operators] of Object.entries(this.definition)) {
+      for (const [operator, operands] of Object.entries(operators)) {
         const stringifiedOperands = operands.map(String).join('|')
         const triplet = new Triplet(field, operator, stringifiedOperands)
         if (triplet.isValid()) {
