@@ -41,6 +41,18 @@ class Triplet {
 
   /**
    * @static
+   * @name isNumericComparatorRegEx
+   * @description Which operator are CERTAIN to be Number comparator
+   * @return {RegExp}
+   *
+   * This is assuming that eq, ne operators CAN BE USED for strings that are equivalent AND lt, lte, gt, gte are for numbers only.
+   */
+  static get isNumericComparatorRegEx () {
+    return /^(lte?|gte?)$/i
+  }
+
+  /**
+   * @static
    * @name fromString
    * @description Parse the current triplet, make sure this method ONLY contains ONE triplet, no comas allowed.
    * @param {string} e.g. Foo_$eq_$Bar,Baz_$in_$Buzz|Bizz
@@ -143,12 +155,17 @@ class Triplet {
    * @param {string} operands A Pipe Separated list (e.g. Foo|Bar)
    */
   setOperands (operands) {
+    const hasOperatorAndIsNumericComparator = this.operator !== null && Triplet.isNumericComparatorRegEx.test(this.operator)
+    // console.log(`setOperands`, operands, hasOperatorAndIsNumericComparator)
     const isString = typeof operands === 'string'
     const candidates = isString ? operands.split('|') : Array.from(operands)
     const filtered = candidates
-      .map(i => i.replace(/[^a-z0-9_\-\s]/i, '').trim())
-      .filter(m => (m || []).length > 0 && /^[0-9a-z_-]*$/i.test(m))
-    this.operands = Array.from(filtered)
+      .map(o => o.replace(/[^a-z0-9_\-\s]/i, '').trim())
+      .filter(o => (o || []).length > 0 && /^[0-9a-z_-]*$/i.test(o))
+    const typedArray = Array.from(filtered)
+      .map(o => hasOperatorAndIsNumericComparator && Number.isInteger(Number(o)) ? Number(o) : o)
+    // console.log('typedArray', typedArray)
+    this.operands = [...typedArray]
   }
 }
 

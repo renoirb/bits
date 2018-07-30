@@ -13,21 +13,20 @@ import Triplet from './triplet'
  * const filter = new Constraint()
  * const begin = 1529812800
  * const end = 1530417600
- * filter.setBetween('CreatedDate', begin, end)
- * filter.addTriplet('Owner', 'eq', 'Administrator')
+ * filter.setFieldBetween('CreatedDate', begin, end)
+ * filter.setField('Owner', 'eq', 'Administrator')
  * filter.toString() // => CreatedDate_$gte_$1529812800,CreatedDate_$lte_$1530417600,Owner_$eq_$Administrator
  * const laterOn = end + 86400 // a day later
- * filter.setBetween('createdAt', begin, laterOn) // End date change to a day later
+ * filter.setFieldBetween('createdAt', begin, laterOn) // End date change to a day later
  * filter.toString() // > CreatedDate_$gte_$1529812800,CreatedDate_$lte_$1530504000,Owner_$eq_$Administrator
  */
 class Constraint {
   /**
    * @name constructor
-   * @param {string} notation a coma separated list of Triplets represented as a string
    * @return {Constraint}
    */
-  constructor (notation = '') {
-    this.notation = notation
+  constructor () {
+    this.notation = ''
     this.triplets = []
     // Handle constraint state.
     // definition is an two-level deep object where the first level keys are the fields
@@ -36,10 +35,6 @@ class Constraint {
     // Objective is to ensure guarantee there will only be
     // one set of operands for a given pair of field and operator.
     this.definition = {}
-    const parsed = Constraint.extractTripletsDefinition(notation)
-    for (const dfn of parsed) {
-      this.addTriplet(dfn.field, dfn.operator, dfn.operands)
-    }
   }
 
   /**
@@ -68,9 +63,13 @@ class Constraint {
     return { ...this.definition[field] }
   }
 
+  toDefinition () {
+    return { ...this.definition }
+  }
+
   /**
    * @method
-   * @name addTriplet
+   * @name setField
    * @description Add/Edit a triplet from the current Constraint.
    *
    * The responsibility of this method is to change the constraint state.
@@ -81,9 +80,14 @@ class Constraint {
    * @param {string} operator What compare as
    * @param {string} operands Predicates to use for the comparison statement (or Triplet)
    */
-  addTriplet (field, operator, operands) {
+  setField (field, operator, operands) {
     const maybe = new Triplet(field, operator, operands)
     const hasField = Reflect.has(this.definition, field)
+    const isOperatorValid = typeof maybe.operator === 'string'
+    // console.log(`setField(${field}, ${operator}, ...)`, isOperatorValid)
+    if (isOperatorValid === false) {
+      return
+    }
     if (hasField === false) {
       this.definition[field] = {}
     } else {
@@ -93,14 +97,17 @@ class Constraint {
       const foundIndex = this.triplets.findIndex(s => RegExp('^' + field + '_\\$' + operator).test(s))
       // const item = this.triplets[foundIndex].toString()
       // console.log('One existed', foundIndex, item)
+      // @TODO Ideally we should not use delete, but splice. #UseSpliceInsteadOfDelete
+      // test('Should be able to handle a Date Range between two UNIX Epoch') breaks if we change this.
       delete this.triplets[foundIndex]
+      // this.triplets.splice(foundIndex, 1)
     }
     const hasFieldOperator = !!Reflect.has(this.definition[field], operator)
     if (hasFieldOperator === false) {
       this.definition[field][operator] = []
     }
     // Watch out though, if you want to have numbers
-    // In the case of #setBetween, we'll have to OVERWRITE as Number
+    // In the case of #setFieldBetween, we'll have to OVERWRITE as Number
     const definition = maybe.toDefinition(/* stringifiedOperands defaults true */ false)
     this.definition[field][operator] = [...definition.operands]
     // /Handle constraint state.
@@ -111,24 +118,24 @@ class Constraint {
 
   /**
    * @method
-   * @name setBetween
-   * @description Wrapper method around #addTriplet to create a comparison between two numbers
+   * @name setFieldBetween
+   * @description Wrapper method around #setField to create a comparison between two numbers
    *
    * @param {string} field What field to seek for, but this time, will be creating two Triplets for AFTER begin, and BEFORE end date.
    * @param {number} begin to compare greater or equal than
    * @param {number} end to compare less or equal than
    */
-  setBetween (field, begin, end) {
+  setFieldBetween (field, begin, end) {
     if (Number.isNaN(begin) || Number.isNaN(end)) {
       const message = 'Both the begin or the end date MUST BE Numbers'
       throw new Error(message)
     }
     // Watch out though, if you want to have numbers
-    // In #addTriplet, we get a string, but internally here we'd prefer Numbers
+    // In #setField, we get a string, but internally here we'd prefer Numbers
     // That'S why we're OVERWRITING them as Number
-    this.addTriplet(field, 'gte', begin.toString())
+    this.setField(field, 'gte', begin.toString())
     this.definition[field]['gte'] = [begin]
-    this.addTriplet(field, 'lte', end.toString())
+    this.setField(field, 'lte', end.toString())
     this.definition[field]['lte'] = [end]
   }
 
@@ -170,7 +177,32 @@ class Constraint {
    * @see {@link constructor}
    */
   static fromString (notation = '') {
-    return new Constraint(notation)
+    let candidate = new Constraint()
+    const parsed = Constraint.extractTripletsDefinition(notation)
+    for (const dfn of parsed) {
+      candidate.setField(dfn.field, dfn.operator, dfn.operands)
+    }
+
+    return candidate
+  }
+
+  static fromDefinition (definition = {}) {
+    let candidate = new Constraint()
+    for (const [
+      field,
+      fieldDefinition
+    ] of Object.entries(definition)) {
+      for (const [
+        operator,
+        operands
+      ] of Object.entries(fieldDefinition)) {
+        // setField expect strings, no worries, itll be casted back to Number if operator matches.
+        const rearrangedOperands = operands.map(String)
+        candidate.setField(field, operator, rearrangedOperands)
+      }
+    }
+
+    return candidate
   }
 
   /**
