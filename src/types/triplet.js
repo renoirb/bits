@@ -3,7 +3,6 @@
  * @public
  * @class
  * @name Triplet
- * @package bindings
  * @description A Triplet consist of a set of 3 elements; a field, an operator and an operand that is a pipe separated list of strings
  * @summary A triplet is ONE element, a description of what field to compare logically with what operator for given criteria
  *
@@ -41,14 +40,16 @@ class Triplet {
 
   /**
    * @static
-   * @name isNumericComparatorRegEx
+   * @name isOperatorRequiresOperandsAsNumber
    * @description Which operator are CERTAIN to be Number comparator
    * @return {RegExp}
    *
    * This is assuming that eq, ne operators CAN BE USED for strings that are equivalent AND lt, lte, gt, gte are for numbers only.
    */
-  static get isNumericComparatorRegEx () {
-    return /^(lte?|gte?)$/i
+  isOperatorRequiresOperandsAsNumber () {
+    const hasOperator = this.operator !== null
+    const operator = hasOperator ? this.operator : ''
+    return /^(lte?|gte?)$/i.test(operator)
   }
 
   /**
@@ -126,7 +127,7 @@ class Triplet {
    */
   setField (field) {
     const fieldIsString = typeof field === 'string'
-    const candidate = fieldIsString ? field.replace(/[^a-z0-9\s]/i, '') : null
+    const candidate = fieldIsString ? field.replace(/[^a-z0-9.]/ig, '') : null
     this.field = candidate
   }
 
@@ -154,17 +155,16 @@ class Triplet {
    * @description What are the values we want to compare against
    * @param {string} operands A Pipe Separated list (e.g. Foo|Bar)
    */
-  setOperands (operands) {
-    const hasOperatorAndIsNumericComparator = this.operator !== null && Triplet.isNumericComparatorRegEx.test(this.operator)
-    // console.log(`setOperands`, operands, hasOperatorAndIsNumericComparator)
+  setOperands (operands = '') {
+    const isOperatorRequiresOperandsAsNumber = this.isOperatorRequiresOperandsAsNumber()
     const isString = typeof operands === 'string'
     const candidates = isString ? operands.split('|') : Array.from(operands)
     const filtered = candidates
-      .map(o => o.replace(/[^a-z0-9_\-\s]/i, '').trim())
-      .filter(o => (o || []).length > 0 && /^[0-9a-z_-]*$/i.test(o))
+      .map(o => o.replace(/[^a-z0-9_-\s]/i, '').trim())
+      .filter(o => (o || []).length > 0 && /^[0-9a-z_-\s]*$/i.test(o))
     const typedArray = Array.from(filtered)
-      .map(o => hasOperatorAndIsNumericComparator && Number.isInteger(Number(o)) ? Number(o) : o)
-    // console.log('typedArray', typedArray)
+      .map(o => isOperatorRequiresOperandsAsNumber && Number.isInteger(Number(o)) ? Number(o) : o)
+    // console.log('typedArray', candidates, typedArray)
     this.operands = [...typedArray]
   }
 }

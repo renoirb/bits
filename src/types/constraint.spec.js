@@ -7,155 +7,339 @@ const SubjectClass = require('./constraint')
 const Triplet = require('./triplet')
 
 describe('types/constraint', () => {
-  let alpha = 'Foo_$eq_$Bar|Baz,Buzz_$in_$Bizz'
-  test(`Should be able to handle "${alpha}"`, () => {
-    const subject = SubjectClass.fromString(alpha)
-    expect(subject).toHaveProperty('notation')
-    expect(subject.notation).toBe(alpha)
-    expect(subject).toHaveProperty('triplets')
-    expect(subject.triplets[0]).toBeInstanceOf(Triplet)
-    expect(subject.triplets.length === 2).toBe(true)
+  const inputNotationAllValid = 'Foo_$in_$Bar|Baz,Buzz_$in_$Bizz'
+  const inputNotationWithIncomplete = 'Foo_$in_$Bar|Baz,Buz_$eq_$'
+  const expectedNotationWithIncomplete = 'Foo_$in_$Bar|Baz'
+  const inputNotationWithBogus = 'Foo_$in_$Bar|  |Baz| ,Bogus|things,Fee_#Fhi_$Foe'
+  const expectedNotationWithBogus = 'Foo_$in_$Bar|Baz'
+  const inputNotationWithSpaceAndDotInField = 'Some Field.Name_$in_$FOO'
+  const expectedNotationWithSpaceAndDotInField = 'SomeField.Name_$in_$FOO'
+
+  test(`Instance methods/properties`, () => {
+    const subject = SubjectClass.fromString(inputNotationAllValid)
+
+    expect(subject).toHaveProperty('definition')
+    // #toString() method so we can type cast Constraint as a formatted string
+    expect(subject).toHaveProperty('toString')
+    // #toJSON() method so we can export the state, to persist elsewhere
+    expect(subject).toHaveProperty('toJSON')
+    // #fieldKeys property to know which fields are part of the Constraint
+    expect(subject).toHaveProperty('fieldKeys')
+    // #toTriplets() method so we can pass directly to Vue components
+    expect(subject).toHaveProperty('toTriplets')
+    // #clearField method so we can remove previously set definition
+    expect(subject).toHaveProperty('clearField')
   })
 
-  test('Should be able to return an array of Triplet', () => {
-    const subject = SubjectClass.fromString('Foo_$eq_$Bar')
-    expect(subject.triplets[0]).toBeInstanceOf(Triplet)
-    expect(subject.triplets.length === 1).toBe(true)
-    expect(subject.triplets[0].operands).toContain('Bar')
+  test(`Scenario 1: #fromString() Should be able to handle "${inputNotationAllValid}"`, () => {
+    const subject = SubjectClass.fromString(inputNotationAllValid)
+
+    // e.g. 'Foo_$in_$Bar|Baz,Buzz_$in_$Bizz'
+    expect(String(subject)).toBe(inputNotationAllValid)
+    // Notice Foo and Buzz, when we split the string, by coma
+    expect(subject.fieldKeys).toMatchObject(['Foo', 'Buzz'])
+
+    // Get as a Description HashMap Object
+    let triplets = subject.getField('Foo')
+    expect(triplets).toMatchObject({in: ['Bar', 'Baz']})
+
+    // Get as an Array of Triplet
+    triplets = subject.getField('Foo', true)
+    const expectedTriplets = [
+      new Triplet('Foo', 'in', ['Bar', 'Baz'])
+    ]
+    expect(triplets).toMatchObject(expectedTriplets)
+    expect(triplets[0]).toBeInstanceOf(Triplet)
+
+    // Snapshot states at the end, to help debugging.
+    // Tip: Within a BitSrc workspace, with testers environment in place,
+    //      look at dist/__snapshots__/ for snapshot files
+    // expect(subject).toMatchSnapshot()
+    // expect(subject.toTriplets()).toMatchSnapshot()
   })
 
-  let bravo = 'Foo_$eq_$Bar,Hello_$eq_$Multiverse'
-  test(`Should be able to handle "${bravo}" and stringify it back to the same thing`, () => {
-    const subject = SubjectClass.fromString(bravo)
-    expect(subject.triplets[0].toString()).toBe('Foo_$eq_$Bar')
-    const stringified = subject.toString()
-    expect(stringified).toBe(bravo)
-    expect(subject.definition).toMatchSnapshot()
+  test('Scenario 2: #fromString() Should be able to recover a workable collection of Triplet, yet #toString() return fully defined Triplets only', () => {
+    const subject = SubjectClass.fromString('Foo_$in_$Bar|Baz,Buz_$eq_$')
+
+    let field = subject.getField('Foo')
+    expect(field).toMatchObject({in: ['Bar', 'Baz']})
+    field = subject.getField('Buz')
+    expect(field).toMatchObject({eq: []})
+
+    let triplets = subject.getField('Buz', true)
+    const expectedTriplets = [
+      new Triplet('Buz', 'eq')
+    ]
+    expect(triplets).toMatchObject(expectedTriplets)
+    expect(triplets[0]).toBeInstanceOf(Triplet)
+
+    const expectedString = expectedNotationWithBogus
+    expect(String(subject)).toBe(expectedString)
+
+    // expect(subject).toMatchSnapshot()
+    // expect(subject.toTriplets()).toMatchSnapshot()
   })
 
-  let expectedCharlie = 'Foo_$eq_$Bar|Baz'
-  let charlie = 'Foo_$eq_$Bar|Baz,Bogus|things'
-  test(`Should be able to give back "${expectedCharlie}" out of "${charlie}"`, () => {
-    const subject = SubjectClass.fromString(charlie)
-    expect(subject.toString()).toBe(expectedCharlie)
-    expect(subject.definition).toMatchSnapshot()
-  })
+  test('Scenario 3: #setDefinition() Should be able to recover a workable collection of Triplet, yet #toString() return fully defined Triplets only', () => {
+    // Reproduce inputNotationWithIncomplete using Object notation
+    // e.g. "Foo_$in_$Bar|Baz,Buz_$eq_$"
+    const definition = {}
+    definition.Foo = {}
+    definition.Foo.in = ['Bar', 'Baz']
+    definition.Buz = {}
+    definition.Buz.eq = []
 
-  test('Should be able to accept more than one operands with pipe character and numbers', () => {
-    const notation = 'SomeFieldName_$in_$FOO_SOMETHING|FOO_SOMETHING_MANUAL'
-    const subject = SubjectClass.fromString(notation)
-    const firstTriplet = subject.triplets[0]
-    expect(firstTriplet.field).toBe('SomeFieldName')
-    expect(firstTriplet.operands.length).toBe(2)
-    expect(firstTriplet.toString()).toBe(notation)
-    expect(subject.notation).toBe(notation)
-    expect(subject.toString()).toBe(notation)
-    expect(subject.definition).toMatchSnapshot()
-  })
-
-  test('Should be able to replace only the matching member for the same field and operator', () => {
-    const notation = 'SomeFieldName_$in_$FOO_SOMETHING|FOO_SOMETHING_MANUAL'
-    const subject = SubjectClass.fromString(notation)
-    expect(subject.toString()).toBe(notation)
-    expect(subject.notation).toBe(notation)
-    subject.setField('Status', 'eq', 'Successful')
-    subject.setField('SomeFieldName', 'in', 'Something_Different')
-    // Also make sure #toString() is still in sync with #notation
-    expect(subject.toString()).toBe('SomeFieldName_$in_$Something_Different,Status_$eq_$Successful')
-    expect(subject.notation).toBe('SomeFieldName_$in_$Something_Different,Status_$eq_$Successful')
-    expect(subject.definition).toMatchSnapshot()
-  })
-
-  test('Should be able to handle a Date Range between two UNIX Epoch', () => {
     const subject = new SubjectClass()
+    subject.setDefinition(definition)
+
+    let field = subject.getField('Foo')
+    expect(field).toMatchObject({in: ['Bar', 'Baz']})
+    field = subject.getField('Buz')
+    expect(field).toMatchObject({eq: []})
+
+    let triplets = subject.getField('Buz', true)
+    const expectedTriplets = [
+      new Triplet('Buz', 'eq')
+    ]
+    expect(triplets).toMatchObject(expectedTriplets)
+    expect(triplets[0]).toBeInstanceOf(Triplet)
+
+    const expectedString = expectedNotationWithIncomplete
+    expect(String(subject)).toBe(expectedString)
+
+    // expect(subject).toMatchSnapshot()
+    // expect(subject.toTriplets()).toMatchSnapshot()
+  })
+
+  test('Scenario 4: #fromString() hydrated Constraint instance should be exportable through #toState(), and be idempotent when creating new instance using #fromState', () => {
+    const original = SubjectClass.fromString(inputNotationWithIncomplete)
+    const state = original.toState()
+    const subject = SubjectClass.fromState(state)
+
+    let field = subject.getField('Foo')
+    expect(field).toMatchObject({in: ['Bar', 'Baz']})
+    field = subject.getField('Buz')
+    expect(field).toMatchObject({eq: []})
+
+    let triplets = subject.getField('Buz', true)
+    const expectedTriplets = [
+      new Triplet('Buz', 'eq')
+    ]
+    expect(triplets).toMatchObject(expectedTriplets)
+    expect(triplets[0]).toBeInstanceOf(Triplet)
+
+    const expectedString = expectedNotationWithIncomplete
+    expect(String(subject)).toBe(expectedString)
+
+    // expect(subject).toMatchSnapshot()
+    // expect(subject.toTriplets()).toMatchSnapshot()
+  })
+
+  test(`Scenario 5: #toString() Should give back only "${expectedNotationWithBogus}" out of bogus "${inputNotationWithBogus}"`, () => {
+    const subject = SubjectClass.fromString(inputNotationWithBogus)
+
+    const expectedString = expectedNotationWithIncomplete
+    expect(String(subject)).toBe(expectedString)
+
+    // expect(subject).toMatchSnapshot()
+    // expect(subject.toTriplets()).toMatchSnapshot()
+  })
+
+  test(`Scenario 6: #toTriplets() Should give back only "${expectedNotationWithBogus}" out of bogus "${inputNotationWithBogus}"`, () => {
+    const subject = SubjectClass.fromString(inputNotationWithBogus)
+
+    let field = subject.getField('Foo')
+    expect(field).toMatchObject({in: ['Bar', 'Baz']})
+
+    // So that we know if we only have one valid triplet, regardless
+    // of if we call only that one field or #toTriplets(), we get the same.
+    let triplets = subject.getField('Foo', true)
+    const expectedTriplets = [
+      new Triplet('Foo', 'in', ['Bar', 'Baz'])
+    ]
+    expect(triplets).toMatchObject(expectedTriplets)
+    expect(subject.toTriplets()).toMatchObject(expectedTriplets)
+    expect(triplets[0]).toBeInstanceOf(Triplet)
+
+    // expect(subject).toMatchSnapshot()
+    // expect(subject.toTriplets()).toMatchSnapshot()
+  })
+
+  test(`Scenario 7: #clone() Should give a fully cloned copy of an existing Constraint instance`, () => {
+    const subject = SubjectClass.fromString(inputNotationWithBogus)
+    const cloned = subject.clone()
+
+    const expectedString = expectedNotationWithBogus
+    expect(String(subject)).toBe(expectedString)
+    expect(String(cloned)).toBe(expectedString)
+
+    cloned.setField('Foo', 'in', 'Quux')
+    expect(String(cloned)).toBe('Foo_$in_$Quux')
+    cloned.setField('Foo', 'nin', ['Quux', 'Bert'], true) // Q*Bert reference (yup!)
+    cloned.setField('Bar', 'eq', 'Baz') // Add another field
+    expect(String(cloned)).toBe('Foo_$nin_$Quux|Bert,Bar_$eq_$Baz')
+    cloned.setField('Bar', 'nin', '', true) // Replace (notice 4th argument) with empty
+
+    const expectedTriplets = [
+      new Triplet('Foo', 'nin', ['Quux', 'Bert']),
+      new Triplet('Bar', 'nin')
+    ]
+    expect(cloned.toTriplets()).toMatchObject(expectedTriplets)
+    expect(String(cloned)).toBe('Foo_$nin_$Quux|Bert')
+
+    // expect(subject).toMatchSnapshot()
+    // expect(subject.toTriplets()).toMatchSnapshot()
+  })
+
+  test('Scenario 8: #setField(fieldName, ...) fieldName can contain dots', () => {
+    const fieldName = 'SomeFieldName.NestedPath.Services'
+    const notation = fieldName + '_$in_$FOO_SOMETHING|FOO_SOMETHING_ELSE'
+    const subject = SubjectClass.fromString(notation)
+
+    expect(String(subject)).toBe(notation)
+
+    const expectedTriplets = [
+      new Triplet(fieldName, 'in', 'FOO_SOMETHING|FOO_SOMETHING_ELSE')
+    ]
+    expect(subject.toTriplets()).toMatchObject(expectedTriplets)
+    expect(subject.getField(fieldName, true)).toMatchObject(expectedTriplets)
+
+    // expect(subject).toMatchSnapshot()
+    // expect(subject.toTriplets()).toMatchSnapshot()
+  })
+
+  test(`Scenario 9: #setField() field part in "${inputNotationWithSpaceAndDotInField}" should have spaces removed, like "${expectedNotationWithSpaceAndDotInField}"`, () => {
+    const subject = SubjectClass.fromString(inputNotationWithSpaceAndDotInField)
+    expect(String(subject)).toBe(expectedNotationWithSpaceAndDotInField)
+    // expect(subject).toMatchSnapshot()
+    // expect(subject.toTriplets()).toMatchSnapshot()
+  })
+
+  test('Scenario 10: #setField("Foo", "eq", operandsString) operandsString can contain space', () => {
+    const subject = new SubjectClass()
+
+    const fieldName = 'Foo'
+    const operator = 'eq'
+    // Notice the dash, it might be useful too!
+    // e.g. '1111-2222-3333'
+    const operandsString = 'Dashed-Operand String With Spaces'
+    subject.setField(fieldName, operator, operandsString)
+
+    // And we can re-define the same field, and add a new member ...
+    subject.setField(fieldName, operator, [operandsString, 'Bar'])
+
+    // And we can re-define the same field, (contd.)
+    // We know that Bar will be last of expectedString, monkey-patch to illustrate.
+    const expectedString = 'Foo_$eq_$Dashed-Operand String With Spaces'
+    expect(String(subject)).toBe(expectedString + '|Bar')
+
+    // expect(subject).toMatchSnapshot()
+    // expect(subject.toTriplets()).toMatchSnapshot()
+  })
+
+  test('Scenario 11: #setField("GroupMembership", "in", operandsString) operandsString gets only non empty strings', () => {
+    const subject = new SubjectClass()
+
+    const fieldName = 'GroupMembership'
+    const operator = 'in'
+    const operandsString = 'admin|users| |  '
+
+    subject.setField(fieldName, operator, operandsString)
+    expect(subject.getField(fieldName)).toMatchObject({in: ['admin', 'users']})
+
+    const expectedString = fieldName + '_$' + operator + '_$' + 'admin|users'
+    expect(String(subject)).toBe(expectedString)
+
+    // expect(subject).toMatchSnapshot()
+    // expect(subject.toTriplets()).toMatchSnapshot()
+  })
+
+  test('Scenario 12: #setFieldBetween() Should be able to handle a Date Range between two UNIX Epoch and update values', () => {
+    const subject = new SubjectClass()
+
     const fieldName = 'CreatedDate'
     const begin = 1529812800
-    const end = 1530417600
-    subject.setFieldBetween(fieldName, begin, end)
-    expect(subject.triplets[0].operands[0]).toBe(begin) // see #UseSpliceInsteadOfDelete
-    expect(subject.triplets[1].operands[0]).toBe(end) // see #UseSpliceInsteadOfDelete
-    let expected = 'CreatedDate_$gte_$'
-    expected += begin
-    expected += ',CreatedDate_$lte_$'
-    expected += end
-    expect(subject.toString()).toBe(expected)
-    expect(subject.notation).toBe(expected)
-    expect(subject.fields).toContain(fieldName)
-    expect(subject.getFieldDefinition(fieldName).gte[0]).toBe(begin) // see #UseSpliceInsteadOfDelete
+    let end = 1530417600
+    const previousEnd = end // String, passed as a copy.
 
-    // Constraint object should look like this;
-    //
-    // Tip: Within a Bitsrc workspace, with testers environment in place, look at dist/__snapshots__/ for other snapshot files
-    //
-    // ```js
-    // Constraint {
-    //   "definition": Object {
-    //     "CreatedDate": Object {
-    //       "gte": Array [
-    //         1529812800,
-    //       ],
-    //       "lte": Array [
-    //         1530417600,
-    //       ],
-    //     },
-    //   },
-    //   "notation": "CreatedDate_$gte_$1529812800,CreatedDate_$lte_$1530417600",
-    //   "triplets": Array [
-    //     Triplet {
-    //       "field": "CreatedDate",
-    //       "operands": Array [
-    //         1529812800,
-    //       ],
-    //       "operator": "gte",
-    //     },
-    //     Triplet {
-    //       "field": "CreatedDate",
-    //       "operands": Array [
-    //         1530417600,
-    //       ],
-    //       "operator": "lte",
-    //     },
-    //   ],
-    // }
-    // ```
-    expect(subject).toMatchSnapshot()
-    expect(subject.definition).toMatchSnapshot()
+    subject.setFieldBetween(fieldName, begin, end)
+    // expect(subject.toTriplets()).toMatchSnapshot() // BEFORE Changing
+
+    let field = subject.getField(fieldName)
+    expect(field.gte[0]).toBe(begin)
+    expect(field.lte[0]).toBe(end)
+
+    let expectedString = 'CreatedDate_$gte_$'
+    expectedString += begin
+    expectedString += ',CreatedDate_$lte_$'
+    expect(String(subject)).toBe(expectedString + end)
+
+    end += 86400 // a day later
+    subject.setFieldBetween(fieldName, begin, end)
+    expect(previousEnd + 86400).toBe(end)
+    // expect(subject.toTriplets()).toMatchSnapshot() // AFTER Changing
+
+    field = subject.getField(fieldName)
+    expect(field.lte[0]).toBe(end)
+    expect(String(subject)).toBe(expectedString + end)
   })
 
-  test('Should be possible to update fields, from both #setField, and #setFieldBetween methods', () => {
-    const subject = new SubjectClass()
-    const fieldName = 'CreatedDate'
-    const begin = 1529812800
-    const end = 1530417600
-    subject.setField('GroupMembership', 'in', 'admin|users|   ') // Potentially bogus, yet possible situation
-    subject.setFieldBetween(fieldName, begin, end)
-    // console.log('\nConstraint before: ', subject.toString())
-    expect(subject.getFieldDefinition(fieldName).lte[0]).toBe(end)
-    subject.setField('Foo', 'eq', 'Baar') // Mix cards, too.
+  test(`Scenario 13: #toJSON() Should serialize and work with JSON.stringify(), it also should give back only "${expectedNotationWithBogus}" out of bogus "${inputNotationWithBogus}"`, () => {
+    const subject = SubjectClass.fromString(inputNotationWithBogus)
 
-    // BEFORE changing CreatedDate and GroupMembership
-    expect(subject.toString()).toMatchSnapshot()
+    let state = {}
+    state.definition = {}
+    state.definition.Foo = {}
+    state.definition.Foo.in = ['Bar', 'Baz']
+    const expectedJson = JSON.stringify(state)
+    // => "{\\"definition\\":{\\"Foo\\":{\\"in\\":[\\"Bar\\",\\"Baz\\"]}}}"
 
-    // CHANGING CreatedDate and GroupMembership
-    const laterOn = end + 86400 // a day later
-    subject.setFieldBetween(fieldName, begin, laterOn)
-    subject.setField('GroupMembership', 'in', 'sudoers')
+    expect(JSON.stringify(subject)).toBe(expectedJson)
+    // toJSON are toState are currently expected to be idempotent.
+    expect(subject.toJSON()).toMatchObject(state)
+    expect(subject.toState()).toMatchObject(state)
 
-    // SANITY CHECKS if our changes are applied
-    expect(subject.getFieldDefinition(fieldName).lte[0]).toBe(laterOn)
-    expect(subject.definition[fieldName].lte[0]).toBe(laterOn) // This needs refactor
-    expect(subject.definition).toMatchSnapshot()
-    expect(subject.toString()).toMatchSnapshot()
+    expect(JSON.stringify(subject)).toMatchSnapshot()
+
+    // expect(subject).toMatchSnapshot()
+    // expect(subject.toTriplets()).toMatchSnapshot()
   })
 
-  test('Internal Constraint state support partially valid Triplets', () => {
+  test('Scenario 14: #setField("Car.Colors", "in", ["red","blue"], true), we should be able to change "in" to another "nin" and keep same values', () => {
     const subject = new SubjectClass()
-    subject.setField('GroupMembership', 'in', '') // Deliberately incomplete
-    subject.setField('AssetId', 'in', '1111-2222-3333| |4444-5555-6666') // Deliberately bogus, empty, member
-    // So we already have definition for the field in place, so we will be able to render form with incomplete state.
-    expect(subject.getFieldDefinition('GroupMembership')).toMatchObject({in: []})
-    expect(subject.definition).toMatchSnapshot()
-    expect(subject).toMatchSnapshot()
-    expect(subject.toString()).toEqual('AssetId_$in_$1111-2222-3333|4444-5555-6666')
+
+    const fieldName = 'Car.Colors'
+    const operator = 'in'
+    const operands = ['red', 'blue']
+
+    subject.setField(fieldName, operator, operands)
+    expect(String(subject)).toEqual('Car.Colors_$in_$red|blue')
+
+    subject.setField(fieldName, 'nin', operands, true)
+    expect(String(subject)).toEqual('Car.Colors_$nin_$red|blue')
+    expect(subject.getField(fieldName)).toMatchObject({nin: operands})
+
+    // expect(subject).toMatchSnapshot()
+    // expect(subject.toTriplets()).toMatchSnapshot()
+  })
+
+  test('Scenario 15: #setField(field, operator, operands) where operands is ALWAYS a Number when operator is (lte?|gte?) (e.g. lt, lte, ...), regardless whether or not operands param is a String or a Number', () => {
+    const subject = new SubjectClass()
+
+    subject.setField('Foo', 'lt', 123)
+    subject.setField('Bar', 'lte', '456')
+
+    // BEGIN Even though this is MOST UNLILELY. ------
+    // subject.setField('Baz', 'gt', [456])
+    // subject.setField('Buzz', 'gte', ['456'])
+    subject.setField('Bizz', 'lt', '123|456')
+    subject.setField('Quux', 'gte', ['123', '456']) // Even though this is MOST UNLILELY.
+    // END Even though this is MOST UNLILELY. ------
+
+    // expect(String(subject)).toEqual('Foo_$lt_$123,Bar_$lte_$456,Baz_$gt_$456,Buzz_$gte_$456,Bizz_$lt_$123|456,Quux_$gte_$123|456')
+    expect(String(subject)).toEqual('Foo_$lt_$123,Bar_$lte_$456,Bizz_$lt_$123|456,Quux_$gte_$123|456')
+
+    // expect(subject).toMatchSnapshot()
+    // expect(subject.toTriplets()).toMatchSnapshot()
   })
 })

@@ -16,7 +16,9 @@
     "dist": "bit build",
     "test": "make test"
   },
-  "dependencies": {},
+  "dependencies": {
+    "esm": "^3.0.72"
+  },
   "devDependencies": {
     "babel-preset-env": "*",
     "bit-bin": "^13.0.3",
