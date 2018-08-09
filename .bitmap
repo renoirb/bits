@@ -97,5 +97,21 @@
         "mainFile": "src/types/constraint.js",
         "origin": "AUTHORED"
     },
+    "renoirb.bindings/types/date-epoch@0.0.1": {
+        "files": [
+            {
+                "relativePath": "src/types/date-epoch.js",
+                "test": false,
+                "name": "date-epoch.js"
+            },
+            {
+                "relativePath": "src/types/date-epoch.spec.js",
+                "test": true,
+                "name": "date-epoch.spec.js"
+            }
+        ],
+        "mainFile": "src/types/date-epoch.js",
+        "origin": "AUTHORED"
+    },
     "version": "13.0.4"
 }
