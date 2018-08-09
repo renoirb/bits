@@ -1,5 +1,5 @@
 class DateEpoch {
-  constructor(epoch = {}) {
+  constructor (epoch = {}) {
     const typeCheckFinite = e => isFinite(e)
     const typeCheckDate = e => 'getUTCDate' in e
     switch (true) {
@@ -16,17 +16,17 @@ class DateEpoch {
     }
   }
 
-  toJSON() {
+  toJSON () {
     return {
-      epoch: this.epoch,
+      epoch: this.epoch
     }
   }
 
-  toString() {
+  toString () {
     return this.epoch
   }
 
-  toDate() {
+  toDate () {
     return getDateFromEpoch(this.epoch)
   }
 }
