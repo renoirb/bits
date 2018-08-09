@@ -65,7 +65,7 @@
         "mainFile": "src/curries/validatable.js",
         "origin": "AUTHORED"
     },
-    "renoirb.bindings/types/triplet@1.2.2": {
+    "renoirb.bindings/types/triplet@1.2.3": {
         "files": [
             {
                 "relativePath": "src/types/triplet.js",
@@ -81,7 +81,7 @@
         "mainFile": "src/types/triplet.js",
         "origin": "AUTHORED"
     },
-    "renoirb.bindings/types/constraint@1.2.4": {
+    "renoirb.bindings/types/constraint@1.2.5": {
         "files": [
             {
                 "name": "constraint.js",

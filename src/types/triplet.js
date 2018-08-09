@@ -160,8 +160,8 @@ class Triplet {
     const isString = typeof operands === 'string'
     const candidates = isString ? operands.split('|') : Array.from(operands)
     const filtered = candidates
-      .map(o => o.replace(/[^a-z0-9_-\s]/i, '').trim())
-      .filter(o => (o || []).length > 0 && /^[0-9a-z_-\s]*$/i.test(o))
+      .map(o => o.replace(/[^a-z0-9@._-\s]/gi, '').trim())
+      .filter(o => (o || []).length > 0 && /^[a-z0-9@._-\s]*$/gi.test(o))
     const typedArray = Array.from(filtered)
       .map(o => isOperatorRequiresOperandsAsNumber && Number.isInteger(Number(o)) ? Number(o) : o)
     // console.log('typedArray', candidates, typedArray)

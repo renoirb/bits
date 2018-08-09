@@ -99,4 +99,10 @@ describe('types/triplet', () => {
     subject.setOperator('in')
     subject.setOperands('REQ_SECURITYSCAN|REQ_SECURITYSCAN_MANUAL')
   })
+
+  test('Should be able to handle stringify back to Foo_$in_$root@example.org|hostmaster@example.org', () => {
+    const subject = new SubjectClass('Foo', 'in', 'root@example.org|hostmaster@example.org')
+    const stringified = subject.toString()
+    expect(stringified).toBe('Foo_$in_$root@example.org|hostmaster@example.org')
+  })
 })

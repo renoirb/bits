@@ -14,6 +14,8 @@ describe('types/constraint', () => {
   const expectedNotationWithBogus = 'Foo_$in_$Bar|Baz'
   const inputNotationWithSpaceAndDotInField = 'Some Field.Name_$in_$FOO'
   const expectedNotationWithSpaceAndDotInField = 'SomeField.Name_$in_$FOO'
+  const inputNotationAdditiveWithEmail = 'Accounts.Username_$in_$root@example.org'
+  const expectedNotationAdditiveWithEmail = expectedNotationWithSpaceAndDotInField + ',' + inputNotationAdditiveWithEmail
 
   test(`Instance methods/properties`, () => {
     const subject = SubjectClass.fromString(inputNotationAllValid)
@@ -341,5 +343,13 @@ describe('types/constraint', () => {
 
     // expect(subject).toMatchSnapshot()
     // expect(subject.toTriplets()).toMatchSnapshot()
+  })
+
+  test('Scenario 15: Additive that has email', () => {
+    const subject = SubjectClass.fromString(expectedNotationWithSpaceAndDotInField)
+    const additive = SubjectClass.fromString(inputNotationAdditiveWithEmail)
+    const triplet = additive.toTriplets()[0]
+    subject.setField(triplet.field, triplet.operator, triplet.operands)
+    expect(String(subject)).toEqual(expectedNotationAdditiveWithEmail)
   })
 })
